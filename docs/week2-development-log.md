@@ -1,11 +1,11 @@
 # Week 2 Development Log
 
-**Project:** MachinaAI
+**Project:** MachineAI
 **Date:** June 9, 2026
 
 ## Project Overview
 
-This week marked the transition from planning and architecture design into active software development. The primary objective was to establish the foundational infrastructure required for the MachinaAI platform, including project organization, backend services, database architecture, and development tooling.
+This week marked the transition from planning and architecture design into active software development. The primary objective was to establish the foundational infrastructure required for the MachineAI platform, including project organization, backend services, database architecture, and development tooling.
 
 The focus was not on implementing manufacturing intelligence features yet, but rather on creating a stable and scalable foundation that will support future development of the prediction engines, analysis systems, and machine learning components.
 
