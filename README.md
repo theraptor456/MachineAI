@@ -1,6 +1,6 @@
-# MachinaAI Backend
+# MachineAI Backend
 
-This repository contains the backend foundation for MachinaAI. The current scope is infrastructure only: FastAPI application bootstrapping, PostgreSQL connectivity, SQLAlchemy models, Alembic migrations, Docker support, environment configuration, and JWT authentication primitives.
+This repository contains the backend foundation for MachineAI. The current scope is infrastructure only: FastAPI application bootstrapping, PostgreSQL connectivity, SQLAlchemy models, Alembic migrations, Docker support, environment configuration, and JWT authentication primitives.
 
 Business logic is intentionally not implemented yet.
 
