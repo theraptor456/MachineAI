@@ -14,8 +14,9 @@ export default function Register() {
       const res = await axios.post('http://localhost:8000/auth/register', { email, username, password })
       localStorage.setItem('token', res.data.access_token)
       navigate('/dashboard')
-    } catch {
-      setError('Registration failed. Email or username may already exist.')
+   } catch (err: any) {
+      const message = err.response?.data?.detail || 'Registration failed. Please try again.'
+      setError(message)
     }
   }
 

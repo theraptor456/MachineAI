@@ -13,8 +13,9 @@ export default function Login() {
       const res = await axios.post('http://localhost:8000/auth/login', { email, password })
       localStorage.setItem('token', res.data.access_token)
       navigate('/dashboard')
-    } catch {
-      setError('Invalid email or password')
+    } catch (err: any) {
+      const message = err.response?.data?.detail || 'Login failed. Please try again.'
+      setError(message)
     }
   }
 
