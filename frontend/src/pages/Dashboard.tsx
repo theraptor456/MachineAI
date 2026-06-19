@@ -70,8 +70,12 @@ export default function Dashboard() {
         </div>
         <div style={{ marginTop: '16px' }}>
           {projects.length === 0 && <p style={{ color: '#888' }}>No projects yet. Create one above.</p>}
-          {projects.map(p => (
-            <div key={p.id} style={{ background: '#0f1117', padding: '12px 16px', borderRadius: '8px', marginTop: '8px' }}>
+         {projects.map(p => (
+            <div
+              key={p.id}
+              onClick={() => navigate(`/projects/${p.id}`)}
+              style={{ background: '#0f1117', padding: '12px 16px', borderRadius: '8px', marginTop: '8px', cursor: 'pointer' }}
+            >
               <p style={{ fontWeight: 'bold' }}>{p.name}</p>
               {p.description && <p style={{ color: '#888', fontSize: '13px' }}>{p.description}</p>}
             </div>

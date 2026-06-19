@@ -42,9 +42,11 @@ def get_project(project_id: int, db: Session = Depends(get_db), current_user: Us
         raise HTTPException(status_code=404, detail="Project not found")
     return project
 
-@router.delete("/{project_id}")
-def remove_project(project_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    project = delete_project(db, project_id, current_user.id)
+from app.services.analysis_service import get_analyses_by_project
+
+@router.get("/{project_id}/analyses")
+def list_project_analyses(project_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    project = get_project_by_id(db, project_id, current_user.id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
-    return {"message": "Project deleted successfully"}
+    return get_analyses_by_project(db, project_id)
