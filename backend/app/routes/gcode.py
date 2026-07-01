@@ -6,6 +6,7 @@ from app.core.database import get_db
 from app.core.dependencies import get_current_user
 from app.models.user import User
 from app.gcode.parser import parse_gcode
+from app.gcode.tool_wear import predict_tool_wear
 from app.services.project_service import get_project_by_id
 from app.services.analysis_service import create_analysis_result
 
@@ -14,16 +15,39 @@ router = APIRouter(prefix="/gcode", tags=["G-Code Analysis"])
 class GCodeRequest(BaseModel):
     gcode_text: str
     project_id: Optional[int] = None
+    material: Optional[str] = "unknown"
+    depth_of_cut: Optional[float] = 1.0
+    tool_name: Optional[str] = None
 
 @router.post("/analyze")
-def analyze_gcode(request: GCodeRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def analyze_gcode(
+    request: GCodeRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     if not request.gcode_text.strip():
         raise HTTPException(status_code=400, detail="G-Code text cannot be empty")
 
     result = parse_gcode(request.gcode_text)
 
-    estimated_runtime = round(result.estimated_cutting_distance / max(result.max_feed_rate, 1) * 60, 2) if result.max_feed_rate else 0
-    estimated_cost = round(estimated_runtime * 0.5, 2)
+    runtime = result.estimated_runtime_minutes
+    estimated_cost = round(runtime * 0.5, 2)
+
+    tool_wear = predict_tool_wear(
+        runtime_minutes=runtime,
+        material=request.material or "unknown",
+        depth_of_cut=request.depth_of_cut or 1.0,
+        cutting_distance=result.estimated_cutting_distance
+    )
+
+    if tool_wear["wear_score"] < 20:
+        risk = "Low"
+    elif tool_wear["wear_score"] < 50:
+        risk = "Moderate"
+    elif tool_wear["wear_score"] < 75:
+        risk = "High"
+    else:
+        risk = "Critical"
 
     response = {
         "total_lines": result.total_lines,
@@ -34,8 +58,13 @@ def analyze_gcode(request: GCodeRequest, db: Session = Depends(get_db), current_
         "min_feed_rate": result.min_feed_rate,
         "max_spindle_speed": result.max_spindle_speed,
         "estimated_cutting_distance": round(result.estimated_cutting_distance, 4),
-        "estimated_runtime_minutes": estimated_runtime,
-        "estimated_cost": estimated_cost
+        "estimated_rapid_distance": round(result.estimated_rapid_distance, 4),
+        "estimated_runtime_minutes": runtime,
+        "estimated_cost": estimated_cost,
+        "tool_wear": tool_wear,
+        "manufacturing_risk": risk,
+        "material": request.material,
+        "tool_name": request.tool_name
     }
 
     if request.project_id:
@@ -45,10 +74,10 @@ def analyze_gcode(request: GCodeRequest, db: Session = Depends(get_db), current_
         create_analysis_result(
             db,
             project_id=request.project_id,
-            estimated_runtime=estimated_runtime,
-            estimated_tool_wear=0.0,
-            surface_finish_quality="Unknown",
-            manufacturing_risk="Low",
+            estimated_runtime=runtime,
+            estimated_tool_wear=tool_wear["wear_score"],
+            surface_finish_quality=tool_wear["wear_level"],
+            manufacturing_risk=risk,
             estimated_cost=estimated_cost
         )
 

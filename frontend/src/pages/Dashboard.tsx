@@ -97,7 +97,18 @@ export default function Dashboard() {
             {Object.entries(analysis).map(([key, value]) => (
               <div key={key} style={{ background: '#0f1117', padding: '12px 16px', borderRadius: '8px' }}>
                 <p style={{ color: '#888', fontSize: '12px', textTransform: 'uppercase' }}>{key.replace(/_/g, ' ')}</p>
-                <p style={{ fontSize: '18px', fontWeight: 'bold', marginTop: '4px' }}>{String(value)}</p>
+                {value !== null && typeof value === 'object' ? (
+                  <div style={{ marginTop: '4px' }}>
+                    {Object.entries(value as Record<string, unknown>).map(([k, v]) => (
+                      <p key={k} style={{ fontSize: '14px', marginTop: '2px' }}>
+                        <span style={{ color: '#888' }}>{k.replace(/_/g, ' ')}: </span>
+                        <span style={{ fontWeight: 'bold' }}>{String(v)}</span>
+                      </p>
+                    ))}
+                  </div>
+                ) : (
+                  <p style={{ fontSize: '18px', fontWeight: 'bold', marginTop: '4px' }}>{String(value)}</p>
+                )}
               </div>
             ))}
           </div>

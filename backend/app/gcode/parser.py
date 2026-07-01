@@ -22,6 +22,8 @@ class GCodeAnalysis:
     min_feed_rate: float = float("inf")
     max_spindle_speed: float = 0.0
     estimated_cutting_distance: float = 0.0
+    estimated_rapid_distance: float = 0.0
+    estimated_runtime_minutes: float = 0.0
     commands: List[GCodeCommand] = field(default_factory=list)
 
 def parse_value(line: str, letter: str) -> Optional[float]:
@@ -32,24 +34,26 @@ def parse_gcode(gcode_text: str) -> GCodeAnalysis:
     analysis = GCodeAnalysis()
     lines = gcode_text.strip().split("\n")
     analysis.total_lines = len(lines)
-
     prev_x, prev_y, prev_z = 0.0, 0.0, 0.0
+    current_feed_rate = 100.0
+    rapid_feed_rate = 3000.0
 
     for i, line in enumerate(lines):
         line = line.strip()
         if not line or line.startswith(";"):
             continue
-
         command_match = re.search(r"[GM]\d+", line, re.IGNORECASE)
         if not command_match:
             continue
-
         command = command_match.group(0).upper()
         x = parse_value(line, "X")
         y = parse_value(line, "Y")
         z = parse_value(line, "Z")
         feed_rate = parse_value(line, "F")
         spindle_speed = parse_value(line, "S")
+
+        if feed_rate:
+            current_feed_rate = feed_rate
 
         gcode_cmd = GCodeCommand(
             line_number=i + 1,
@@ -61,18 +65,22 @@ def parse_gcode(gcode_text: str) -> GCodeAnalysis:
         analysis.commands.append(gcode_cmd)
         analysis.total_commands += 1
 
+        curr_x = x if x is not None else prev_x
+        curr_y = y if y is not None else prev_y
+        curr_z = z if z is not None else prev_z
+        distance = ((curr_x - prev_x)**2 + (curr_y - prev_y)**2 + (curr_z - prev_z)**2) ** 0.5
+
         if command == "G0":
             analysis.rapid_moves += 1
+            analysis.estimated_rapid_distance += distance
+            analysis.estimated_runtime_minutes += distance / rapid_feed_rate
         elif command == "G1":
             analysis.cutting_moves += 1
             if feed_rate:
                 analysis.max_feed_rate = max(analysis.max_feed_rate, feed_rate)
                 analysis.min_feed_rate = min(analysis.min_feed_rate, feed_rate)
-            curr_x = x if x is not None else prev_x
-            curr_y = y if y is not None else prev_y
-            curr_z = z if z is not None else prev_z
-            distance = ((curr_x - prev_x)**2 + (curr_y - prev_y)**2 + (curr_z - prev_z)**2) ** 0.5
             analysis.estimated_cutting_distance += distance
+            analysis.estimated_runtime_minutes += distance / max(current_feed_rate, 1)
 
         if spindle_speed:
             analysis.max_spindle_speed = max(analysis.max_spindle_speed, spindle_speed)
@@ -84,4 +92,5 @@ def parse_gcode(gcode_text: str) -> GCodeAnalysis:
     if analysis.min_feed_rate == float("inf"):
         analysis.min_feed_rate = 0.0
 
+    analysis.estimated_runtime_minutes = round(analysis.estimated_runtime_minutes, 2)
     return analysis

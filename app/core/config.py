@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     api_v1_prefix: str = "/api/v1"
 
     database_url: PostgresDsn | str = Field(
-        default="postgresql+psycopg://machineai:machineai_pass@localhost:5432/machineai_db",
+        default="postgresql+psycopg2://machineai:machineai_pass@localhost:5432/machineai_db",
         description="SQLAlchemy-compatible PostgreSQL connection URL.",
     )
 
