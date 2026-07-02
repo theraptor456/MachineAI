@@ -59,7 +59,10 @@ export default function Dashboard() {
           <h1 style={{ fontSize: '28px' }}>MachineAI</h1>
           <p style={{ color: '#888' }}>CNC Manufacturing Analysis Platform</p>
         </div>
-        <button onClick={logout} style={{ width: 'auto', padding: '8px 20px', background: '#2e3250' }}>Logout</button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button onClick={() => navigate('/assistant')} style={{ width: 'auto', padding: '8px 20px', background: '#3a3f6b' }}>AI Assistant</button>
+          <button onClick={logout} style={{ width: 'auto', padding: '8px 20px', background: '#2e3250' }}>Logout</button>
+        </div>
       </div>
 
       <div style={{ background: '#1e2130', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>

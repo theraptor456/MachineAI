@@ -3,6 +3,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import ProjectDetail from './pages/ProjectDetail'
+import Assistant from './pages/Assistant'
 
 function App() {
   const token = localStorage.getItem('token')
@@ -13,6 +14,7 @@ function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/dashboard" element={token ? <Dashboard /> : <Navigate to="/login" />} />
       <Route path="/projects/:id" element={token ? <ProjectDetail /> : <Navigate to="/login" />} />
+      <Route path="/assistant" element={token ? <Assistant /> : <Navigate to="/login" />} />
       <Route path="*" element={<Navigate to="/login" />} />
     </Routes>
   )

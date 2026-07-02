@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import engine
-from app.routes import auth, projects, gcode, tools, materials
+from app.routes import auth, projects, gcode, tools, materials, ai_assistant
 
 app = FastAPI(
     title="MachineAI",
@@ -22,6 +22,7 @@ app.include_router(projects.router)
 app.include_router(gcode.router)
 app.include_router(tools.router)
 app.include_router(materials.router)
+app.include_router(ai_assistant.router)
 
 @app.get("/")
 def root():
