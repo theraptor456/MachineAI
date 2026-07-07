@@ -21,14 +21,14 @@ export default function Login() {
 
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-      <div style={{ background: '#1e2130', padding: '40px', borderRadius: '12px', width: '360px' }}>
+      <div style={{ background: '#1a1a1a', padding: '40px', borderRadius: '2px', width: '360px' }}>
         <h1 style={{ marginBottom: '8px', fontSize: '24px' }}>MachineAI</h1>
-        <p style={{ color: '#888', marginBottom: '24px' }}>CNC Manufacturing Analysis Platform</p>
+        <p style={{ color: '#8a8a8a', marginBottom: '24px' }}>CNC Manufacturing Analysis Platform</p>
         <input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
         <input placeholder="Password" type="password" value={password} onChange={e => setPassword(e.target.value)} />
         {error && <p style={{ color: '#f87171', marginTop: '8px' }}>{error}</p>}
         <button onClick={handleLogin}>Sign In</button>
-        <p style={{ textAlign: 'center', marginTop: '16px', color: '#888' }}>
+        <p style={{ textAlign: 'center', marginTop: '16px', color: '#8a8a8a' }}>
           Don't have an account? <Link to="/register">Register</Link>
         </p>
       </div>

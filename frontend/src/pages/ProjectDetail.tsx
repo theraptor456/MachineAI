@@ -64,37 +64,37 @@ export default function ProjectDetail() {
 
   return (
     <div style={{ maxWidth: '900px', margin: '0 auto', padding: '40px 20px' }}>
-      <Link to="/dashboard" style={{ color: '#888' }}>&larr; Back to Dashboard</Link>
+      <Link to="/dashboard" style={{ color: '#8a8a8a' }}>&larr; Back to Dashboard</Link>
       <h1 style={{ fontSize: '28px', marginTop: '12px' }}>{project.name}</h1>
-      {project.description && <p style={{ color: '#888', marginBottom: '24px' }}>{project.description}</p>}
+      {project.description && <p style={{ color: '#8a8a8a', marginBottom: '24px' }}>{project.description}</p>}
 
-      <div style={{ background: '#1e2130', borderRadius: '12px', padding: '24px', marginTop: '24px' }}>
+      <div style={{ background: '#1a1a1a', borderRadius: '2px', padding: '24px', marginTop: '24px' }}>
         <h2 style={{ marginBottom: '16px' }}>Run G-Code Analysis</h2>
         <textarea
           placeholder="Paste your G-Code here..."
           value={gcode}
           onChange={e => setGcode(e.target.value)}
-          style={{ width: '100%', height: '140px', background: '#0f1117', border: '1px solid #2e3250', borderRadius: '6px', color: '#e0e0e0', padding: '12px', fontSize: '13px', fontFamily: 'monospace', resize: 'vertical' }}
+          style={{ width: '100%', height: '140px', background: '#121212', border: '1px solid #2a2a2a', borderRadius: '2px', color: '#e8e6e1', padding: '12px', fontSize: '13px', fontFamily: 'monospace', resize: 'vertical' }}
         />
         <button onClick={analyzeGcode} style={{ marginTop: '12px' }}>Analyze and Save to Project</button>
       </div>
 
-      <div style={{ background: '#1e2130', borderRadius: '12px', padding: '24px', marginTop: '24px' }}>
+      <div style={{ background: '#1a1a1a', borderRadius: '2px', padding: '24px', marginTop: '24px' }}>
         <h2 style={{ marginBottom: '16px' }}>Analysis History</h2>
-        {analyses.length === 0 && <p style={{ color: '#888' }}>No analyses yet for this project.</p>}
+        {analyses.length === 0 && <p style={{ color: '#8a8a8a' }}>No analyses yet for this project.</p>}
         {analyses.map(a => (
-          <div key={a.id} style={{ background: '#0f1117', padding: '16px', borderRadius: '8px', marginBottom: '12px' }}>
+          <div key={a.id} style={{ background: '#121212', padding: '16px', borderRadius: '2px', marginBottom: '12px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
               <div>
-                <p style={{ color: '#888', fontSize: '12px' }}>RUNTIME (MIN)</p>
+                <p style={{ color: '#8a8a8a', fontSize: '12px' }}>RUNTIME (MIN)</p>
                 <p style={{ fontWeight: 'bold' }}>{a.estimated_runtime}</p>
               </div>
               <div>
-                <p style={{ color: '#888', fontSize: '12px' }}>ESTIMATED COST</p>
+                <p style={{ color: '#8a8a8a', fontSize: '12px' }}>ESTIMATED COST</p>
                 <p style={{ fontWeight: 'bold' }}>${a.estimated_cost}</p>
               </div>
               <div>
-                <p style={{ color: '#888', fontSize: '12px' }}>RISK</p>
+                <p style={{ color: '#8a8a8a', fontSize: '12px' }}>RISK</p>
                 <p style={{ fontWeight: 'bold' }}>{a.manufacturing_risk}</p>
               </div>
             </div>
