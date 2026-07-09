@@ -63,7 +63,21 @@ def call_claude(message: str, conversation_history: Optional[list] = None, conte
 
 
 def call_openai(message: str, conversation_history: Optional[list] = None, context: str = "") -> str:
-    raise NotImplementedError("OpenAI fallback not yet implemented")
+    from openai import OpenAI
+
+    client = OpenAI(api_key=OPENAI_KEY)
+    messages = [{"role": "system", "content": SYSTEM_PROMPT + "\n\n" + context}]
+    if conversation_history:
+        for turn in conversation_history:
+            messages.append({"role": turn["role"], "content": turn["content"]})
+    messages.append({"role": "user", "content": message})
+
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=messages,
+        max_tokens=1024
+    )
+    return response.choices[0].message.content
 
 
 def get_mock_response(message: str) -> str:
