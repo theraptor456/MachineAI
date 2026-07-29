@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import axios from 'axios'
+import PageTransition from '../components/PageTransition'
 import { useNavigate } from 'react-router-dom'
 
 interface Message {
@@ -57,18 +58,18 @@ function CameraModal({ onCapture, onClose }: { onCapture: (file: File) => void; 
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-      <div style={{ background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: '2px', padding: '20px', maxWidth: '600px', width: '90%' }}>
-        <h3 style={{ marginTop: 0, marginBottom: '12px' }}>Take a Photo</h3>
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+      <div style={{ background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: '2px', padding: '24px', maxWidth: '600px', width: '90%' }}>
+        <h3 style={{ marginTop: 0, marginBottom: '16px', fontSize: '17px' }}>Take a Photo</h3>
         {error ? (
-          <p style={{ color: '#c73e3e' }}>{error}</p>
+          <p style={{ color: '#c73e3e', fontSize: '14px' }}>{error}</p>
         ) : (
           <video ref={videoRef} autoPlay playsInline style={{ width: '100%', borderRadius: '2px', background: '#000' }} />
         )}
         <canvas ref={canvasRef} style={{ display: 'none' }} />
-        <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
+        <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
           <button onClick={capture} disabled={!!error} style={{ flex: 1, background: '#ff6b1a', color: '#121212' }}>Capture</button>
-          <button onClick={onClose} style={{ flex: 1, background: '#2a2a2a', color: '#e8e6e1' }}>Cancel</button>
+          <button onClick={onClose} style={{ flex: 1, background: 'transparent', border: '1px solid #2a2a2a', color: '#e8e6e1' }}>Cancel</button>
         </div>
       </div>
     </div>
@@ -162,8 +163,23 @@ export default function Assistant() {
     }
   }
 
+  const labelStyle: React.CSSProperties = {
+    fontSize: '10px',
+    fontWeight: 600,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    color: '#8a8a8a',
+    marginBottom: '6px',
+  }
+
+  const iconButtonStyle: React.CSSProperties = {
+    background: '#1a1a1a', border: '1px solid #2a2a2a', color: '#e8e6e1',
+    padding: '0 10px', fontSize: '13px', whiteSpace: 'nowrap', transition: 'border-color 0.15s ease'
+  }
+
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px', display: 'flex', flexDirection: 'column', height: '100vh', boxSizing: 'border-box' }}>
+    <PageTransition>
+    <div style={{ maxWidth: '880px', margin: '0 auto', padding: '40px 24px', display: 'flex', flexDirection: 'column', height: '100vh', boxSizing: 'border-box' }}>
       {cameraTarget && (
         <CameraModal
           onCapture={file => {
@@ -174,79 +190,91 @@ export default function Assistant() {
         />
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <h2 style={{ margin: 0 }}>AI CNC Assistant</h2>
-        <button onClick={() => navigate('/dashboard')} style={{ background: '#1a1a1a', border: '1px solid #2a2a2a', color: '#e8e6e1', padding: '8px 16px', borderRadius: '2px', cursor: 'pointer' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div>
+          <div style={labelStyle}>Assistant</div>
+          <h2 style={{ margin: 0, fontSize: '22px', letterSpacing: '-0.02em' }}>AI CNC Assistant</h2>
+        </div>
+        <button
+          onClick={() => navigate('/dashboard')}
+          style={{ background: '#1a1a1a', border: '1px solid #2a2a2a', color: '#e8e6e1', padding: '10px 18px', borderRadius: '2px', cursor: 'pointer' }}
+        >
           Back to Dashboard
         </button>
       </div>
 
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
-        <div style={{ flex: 1, display: 'flex', gap: '6px' }}>
-          <select value={selectedMaterial} onChange={e => setSelectedMaterial(e.target.value)} style={{ flex: 1 }}>
-            <option value="">No material selected</option>
-            {materials.map(m => (
-              <option key={m.id} value={m.name}>{m.name}</option>
-            ))}
-          </select>
-          <input
-            ref={materialFileRef}
-            type="file"
-            accept="image/*"
-            style={{ display: 'none' }}
-            onChange={e => e.target.files && handleImageUpload(e.target.files[0], 'material')}
-          />
-          <button
-            onClick={() => materialFileRef.current?.click()}
-            disabled={identifying !== null}
-            title="Upload a photo"
-            style={{ background: '#1a1a1a', border: '1px solid #2a2a2a', color: '#e8e6e1', padding: '0 10px', fontSize: '13px', whiteSpace: 'nowrap' }}
-          >
-            {identifying === 'material' ? '...' : '📁'}
-          </button>
-          <button
-            onClick={() => setCameraTarget('material')}
-            disabled={identifying !== null}
-            title="Take a photo"
-            style={{ background: '#1a1a1a', border: '1px solid #2a2a2a', color: '#e8e6e1', padding: '0 10px', fontSize: '13px', whiteSpace: 'nowrap' }}
-          >
-            {identifying === 'material' ? '...' : '📷'}
-          </button>
+      <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
+        <div style={{ flex: 1 }}>
+          <div style={labelStyle}>Material</div>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <select value={selectedMaterial} onChange={e => setSelectedMaterial(e.target.value)} style={{ flex: 1 }}>
+              <option value="">No material selected</option>
+              {materials.map(m => (
+                <option key={m.id} value={m.name}>{m.name}</option>
+              ))}
+            </select>
+            <input
+              ref={materialFileRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={e => e.target.files && handleImageUpload(e.target.files[0], 'material')}
+            />
+            <button
+              onClick={() => materialFileRef.current?.click()}
+              disabled={identifying !== null}
+              title="Upload a photo"
+              style={iconButtonStyle}
+            >
+              {identifying === 'material' ? '...' : '📁'}
+            </button>
+            <button
+              onClick={() => setCameraTarget('material')}
+              disabled={identifying !== null}
+              title="Take a photo"
+              style={iconButtonStyle}
+            >
+              {identifying === 'material' ? '...' : '📷'}
+            </button>
+          </div>
         </div>
-        <div style={{ flex: 1, display: 'flex', gap: '6px' }}>
-          <select value={selectedTool} onChange={e => setSelectedTool(e.target.value)} style={{ flex: 1 }}>
-            <option value="">No tool selected</option>
-            {tools.map(t => (
-              <option key={t.id} value={t.name}>{t.name}</option>
-            ))}
-          </select>
-          <input
-            ref={toolFileRef}
-            type="file"
-            accept="image/*"
-            style={{ display: 'none' }}
-            onChange={e => e.target.files && handleImageUpload(e.target.files[0], 'tool')}
-          />
-          <button
-            onClick={() => toolFileRef.current?.click()}
-            disabled={identifying !== null}
-            title="Upload a photo"
-            style={{ background: '#1a1a1a', border: '1px solid #2a2a2a', color: '#e8e6e1', padding: '0 10px', fontSize: '13px', whiteSpace: 'nowrap' }}
-          >
-            {identifying === 'tool' ? '...' : '📁'}
-          </button>
-          <button
-            onClick={() => setCameraTarget('tool')}
-            disabled={identifying !== null}
-            title="Take a photo"
-            style={{ background: '#1a1a1a', border: '1px solid #2a2a2a', color: '#e8e6e1', padding: '0 10px', fontSize: '13px', whiteSpace: 'nowrap' }}
-          >
-            {identifying === 'tool' ? '...' : '📷'}
-          </button>
+        <div style={{ flex: 1 }}>
+          <div style={labelStyle}>Tool</div>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <select value={selectedTool} onChange={e => setSelectedTool(e.target.value)} style={{ flex: 1 }}>
+              <option value="">No tool selected</option>
+              {tools.map(t => (
+                <option key={t.id} value={t.name}>{t.name}</option>
+              ))}
+            </select>
+            <input
+              ref={toolFileRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={e => e.target.files && handleImageUpload(e.target.files[0], 'tool')}
+            />
+            <button
+              onClick={() => toolFileRef.current?.click()}
+              disabled={identifying !== null}
+              title="Upload a photo"
+              style={iconButtonStyle}
+            >
+              {identifying === 'tool' ? '...' : '📁'}
+            </button>
+            <button
+              onClick={() => setCameraTarget('tool')}
+              disabled={identifying !== null}
+              title="Take a photo"
+              style={iconButtonStyle}
+            >
+              {identifying === 'tool' ? '...' : '📷'}
+            </button>
+          </div>
         </div>
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', background: '#1a1a1a', borderRadius: '2px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: '2px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {messages.map((m, i) => (
           <div key={i} style={{ display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start' }}>
             <div style={{
@@ -255,9 +283,9 @@ export default function Assistant() {
               color: m.role === 'user' ? '#121212' : '#e8e6e1',
               border: m.role === 'assistant' ? '1px solid #2a2a2a' : 'none',
               borderRadius: '2px',
-              padding: '10px 14px',
+              padding: '12px 16px',
               fontSize: '14px',
-              lineHeight: 1.5,
+              lineHeight: 1.6,
               whiteSpace: 'pre-wrap'
             }}>
               {m.content}
@@ -266,7 +294,7 @@ export default function Assistant() {
         ))}
         {loading && (
           <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-            <div style={{ background: '#121212', border: '1px solid #2a2a2a', borderRadius: '2px', padding: '10px 14px', fontSize: '14px', color: '#8a8a8a' }}>
+            <div style={{ background: '#121212', border: '1px solid #2a2a2a', borderRadius: '2px', padding: '12px 16px', fontSize: '14px', color: '#8a8a8a' }}>
               Thinking...
             </div>
           </div>
@@ -274,18 +302,19 @@ export default function Assistant() {
         <div ref={bottomRef} />
       </div>
 
-      <div style={{ marginTop: '16px', display: 'flex', gap: '10px' }}>
+      <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
         <textarea
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Ask about G-Code, tools, materials, feeds and speeds..."
-          style={{ flex: 1, height: '50px', resize: 'none', background: '#121212', border: '1px solid #2a2a2a', borderRadius: '2px', color: '#e8e6e1', padding: '12px', fontSize: '14px', fontFamily: 'inherit' }}
+          style={{ flex: 1, height: '54px', resize: 'none', background: '#121212', border: '1px solid #2a2a2a', borderRadius: '2px', color: '#e8e6e1', padding: '14px', fontSize: '14px', fontFamily: 'inherit' }}
         />
-        <button onClick={sendMessage} disabled={loading} style={{ padding: '0 20px', borderRadius: '2px', border: 'none', background: '#ff6b1a', color: '#121212', cursor: 'pointer' }}>
+        <button onClick={sendMessage} disabled={loading} style={{ padding: '0 24px', borderRadius: '2px', border: 'none', background: '#ff6b1a', color: '#121212', cursor: 'pointer' }}>
           Send
         </button>
       </div>
     </div>
+    </PageTransition>
   )
 }

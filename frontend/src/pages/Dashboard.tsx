@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import PageTransition from '../components/PageTransition'
 
 interface Project {
   id: number
@@ -13,6 +14,7 @@ export default function Dashboard() {
   const [newProject, setNewProject] = useState('')
   const [gcode, setGcode] = useState('')
   const [analysis, setAnalysis] = useState<any>(null)
+  const [analyzing, setAnalyzing] = useState(false)
   const navigate = useNavigate()
   const token = localStorage.getItem('token')
 
@@ -39,11 +41,14 @@ export default function Dashboard() {
   }
 
   const analyzeGcode = async () => {
+    setAnalyzing(true)
     try {
       const res = await axios.post('http://localhost:8000/gcode/analyze', { gcode_text: gcode }, { headers })
       setAnalysis(res.data)
     } catch {
       alert('Analysis failed')
+    } finally {
+      setAnalyzing(false)
     }
   }
 
@@ -52,65 +57,118 @@ export default function Dashboard() {
     navigate('/login')
   }
 
+  const cardStyle: React.CSSProperties = {
+    background: '#1a1a1a',
+    border: '1px solid #2a2a2a',
+    borderRadius: '2px',
+    padding: '32px',
+  }
+
+  const sectionLabelStyle: React.CSSProperties = {
+    fontSize: '11px',
+    fontWeight: 600,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    color: '#8a8a8a',
+    marginBottom: '8px',
+  }
+
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '40px 20px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
+<PageTransition>
+          <div style={{ maxWidth: '960px', margin: '0 auto', padding: '64px 24px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '56px' }}>
         <div>
-          <h1 style={{ fontSize: '28px' }}>MachineAI</h1>
-          <p style={{ color: '#8a8a8a' }}>CNC Manufacturing Analysis Platform</p>
+          <h1 style={{ fontSize: '30px', margin: 0, letterSpacing: '-0.02em' }}>MachineAI</h1>
+          <p style={{ color: '#8a8a8a', marginTop: '6px', fontSize: '14px' }}>CNC Manufacturing Analysis Platform</p>
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button onClick={() => navigate('/assistant')} style={{ width: 'auto', padding: '8px 20px', background: '#ff6b1a' }}>AI Assistant</button>
-          <button onClick={logout} style={{ width: 'auto', padding: '8px 20px', background: '#2a2a2a' }}>Logout</button>
+          <button
+            onClick={() => navigate('/assistant')}
+            style={{
+              width: 'auto', padding: '10px 20px', background: '#1a1a1a', border: '1px solid #2a2a2a',
+              color: '#e8e6e1', transition: 'border-color 0.15s ease, background 0.15s ease'
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = '#ff6b1a' }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = '#2a2a2a' }}
+          >
+            AI Assistant
+          </button>
+          <button
+            onClick={logout}
+            style={{ width: 'auto', padding: '10px 20px', background: 'transparent', border: '1px solid #2a2a2a', color: '#8a8a8a' }}
+          >
+            Logout
+          </button>
         </div>
       </div>
 
-      <div style={{ background: '#1a1a1a', borderRadius: '2px', padding: '24px', marginBottom: '24px' }}>
-        <h2 style={{ marginBottom: '16px' }}>Projects</h2>
+      <div style={{ ...cardStyle, marginBottom: '24px' }}>
+        <div style={sectionLabelStyle}>Projects</div>
+        <h2 style={{ marginTop: 0, marginBottom: '20px', fontSize: '20px' }}>Your Projects</h2>
         <div style={{ display: 'flex', gap: '10px' }}>
           <input placeholder="New project name" value={newProject} onChange={e => setNewProject(e.target.value)} style={{ margin: 0 }} />
-          <button onClick={createProject} style={{ width: 'auto', padding: '10px 20px', margin: 0 }}>Create</button>
+          <button onClick={createProject} style={{ width: 'auto', padding: '10px 20px', margin: 0, background: '#1a1a1a', border: '1px solid #2a2a2a', color: '#e8e6e1' }}>
+            Create
+          </button>
         </div>
-        <div style={{ marginTop: '16px' }}>
-          {projects.length === 0 && <p style={{ color: '#8a8a8a' }}>No projects yet. Create one above.</p>}
-         {projects.map(p => (
+        <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {projects.length === 0 && (
+            <p style={{ color: '#8a8a8a', fontSize: '14px', padding: '16px 0' }}>No projects yet — create one above to get started.</p>
+          )}
+          {projects.map(p => (
             <div
               key={p.id}
               onClick={() => navigate(`/projects/${p.id}`)}
-              style={{ background: '#121212', padding: '12px 16px', borderRadius: '2px', marginTop: '8px', cursor: 'pointer' }}
+              style={{
+                background: '#121212', border: '1px solid #2a2a2a', padding: '16px 18px', borderRadius: '2px',
+                cursor: 'pointer', transition: 'border-color 0.15s ease'
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#ff6b1a' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#2a2a2a' }}
             >
-              <p style={{ fontWeight: 'bold' }}>{p.name}</p>
-              {p.description && <p style={{ color: '#8a8a8a', fontSize: '13px' }}>{p.description}</p>}
+              <p style={{ fontWeight: 600, margin: 0, fontSize: '15px' }}>{p.name}</p>
+              {p.description && <p style={{ color: '#8a8a8a', fontSize: '13px', margin: '4px 0 0' }}>{p.description}</p>}
             </div>
           ))}
         </div>
       </div>
 
-      <div style={{ background: '#1a1a1a', borderRadius: '2px', padding: '24px' }}>
-        <h2 style={{ marginBottom: '16px' }}>G-Code Analyzer</h2>
+      <div style={cardStyle}>
+        <div style={sectionLabelStyle}>Analysis</div>
+        <h2 style={{ marginTop: 0, marginBottom: '20px', fontSize: '20px' }}>G-Code Analyzer</h2>
         <textarea
           placeholder="Paste your G-Code here..."
           value={gcode}
           onChange={e => setGcode(e.target.value)}
-          style={{ width: '100%', height: '160px', background: '#121212', border: '1px solid #2a2a2a', borderRadius: '2px', color: '#e8e6e1', padding: '12px', fontSize: '13px', fontFamily: 'monospace', resize: 'vertical' }}
+          style={{ width: '100%', height: '180px', background: '#121212', border: '1px solid #2a2a2a', borderRadius: '2px', color: '#e8e6e1', padding: '14px', fontSize: '13px', fontFamily: 'JetBrains Mono, monospace', resize: 'vertical', lineHeight: 1.6 }}
         />
-        <button onClick={analyzeGcode} style={{ marginTop: '12px' }}>Analyze G-Code</button>
+        <button
+          onClick={analyzeGcode}
+          disabled={analyzing}
+          style={{ marginTop: '16px' }}
+        >
+          {analyzing ? 'Analyzing...' : 'Analyze G-Code'}
+        </button>
         {analysis && (
-          <div style={{ marginTop: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div style={{ marginTop: '28px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             {Object.entries(analysis).map(([key, value]) => (
-              <div key={key} style={{ background: '#121212', padding: '12px 16px', borderRadius: '2px' }}>
-                <p style={{ color: '#8a8a8a', fontSize: '12px', textTransform: 'uppercase' }}>{key.replace(/_/g, ' ')}</p>
+              <div key={key} style={{ background: '#121212', border: '1px solid #2a2a2a', padding: '16px 18px', borderRadius: '2px' }}>
+                <p style={{ color: '#8a8a8a', fontSize: '11px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', margin: 0 }}>
+                  {key.replace(/_/g, ' ')}
+                </p>
                 {value !== null && typeof value === 'object' ? (
-                  <div style={{ marginTop: '4px' }}>
+                  <div style={{ marginTop: '8px' }}>
                     {Object.entries(value as Record<string, unknown>).map(([k, v]) => (
-                      <p key={k} style={{ fontSize: '14px', marginTop: '2px' }}>
+                      <p key={k} style={{ fontSize: '14px', marginTop: '4px', margin: 0 }}>
                         <span style={{ color: '#8a8a8a' }}>{k.replace(/_/g, ' ')}: </span>
-                        <span style={{ fontWeight: 'bold' }}>{String(v)}</span>
+                        <span style={{ fontWeight: 600, fontFamily: 'JetBrains Mono, monospace' }}>{String(v)}</span>
                       </p>
                     ))}
                   </div>
                 ) : (
-                  <p style={{ fontSize: '18px', fontWeight: 'bold', marginTop: '4px' }}>{String(value)}</p>
+                  <p style={{ fontSize: '19px', fontWeight: 600, marginTop: '6px', marginBottom: 0, fontFamily: 'JetBrains Mono, monospace' }}>
+                    {String(value)}
+                  </p>
                 )}
               </div>
             ))}
@@ -118,5 +176,6 @@ export default function Dashboard() {
         )}
       </div>
     </div>
+    </PageTransition>
   )
 }

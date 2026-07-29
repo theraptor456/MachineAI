@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import axios from 'axios'
+import PageTransition from '../components/PageTransition'
 
 interface Analysis {
   id: number
@@ -18,12 +19,23 @@ interface Project {
   description: string
 }
 
+const riskColor = (risk: string) => {
+  switch (risk?.toLowerCase()) {
+    case 'low': return '#4a9d6f'
+    case 'moderate': return '#d4a017'
+    case 'high': return '#e07b1a'
+    case 'critical': return '#c73e3e'
+    default: return '#e8e6e1'
+  }
+}
+
 export default function ProjectDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [project, setProject] = useState<Project | null>(null)
   const [analyses, setAnalyses] = useState<Analysis[]>([])
   const [gcode, setGcode] = useState('')
+  const [analyzing, setAnalyzing] = useState(false)
   const token = localStorage.getItem('token')
   const headers = { Authorization: `Bearer ${token}` }
 
@@ -51,57 +63,84 @@ export default function ProjectDetail() {
   }
 
   const analyzeGcode = async () => {
+    setAnalyzing(true)
     try {
       await axios.post('http://localhost:8000/gcode/analyze', { gcode_text: gcode, project_id: Number(id) }, { headers })
       setGcode('')
       fetchAnalyses()
     } catch {
       alert('Analysis failed')
+    } finally {
+      setAnalyzing(false)
     }
   }
 
-  if (!project) return <div style={{ padding: '40px', textAlign: 'center' }}>Loading...</div>
+  const cardStyle: React.CSSProperties = {
+    background: '#1a1a1a',
+    border: '1px solid #2a2a2a',
+    borderRadius: '2px',
+    padding: '32px',
+  }
+
+  const sectionLabelStyle: React.CSSProperties = {
+    fontSize: '11px',
+    fontWeight: 600,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    color: '#8a8a8a',
+    marginBottom: '8px',
+  }
+
+  if (!project) return <div style={{ padding: '80px', textAlign: 'center', color: '#8a8a8a' }}>Loading...</div>
 
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '40px 20px' }}>
-      <Link to="/dashboard" style={{ color: '#8a8a8a' }}>&larr; Back to Dashboard</Link>
-      <h1 style={{ fontSize: '28px', marginTop: '12px' }}>{project.name}</h1>
-      {project.description && <p style={{ color: '#8a8a8a', marginBottom: '24px' }}>{project.description}</p>}
+<PageTransition>
+          <div style={{ maxWidth: '960px', margin: '0 auto', padding: '64px 24px' }}>
+      <Link to="/dashboard" style={{ color: '#8a8a8a', fontSize: '13px', textDecoration: 'none' }}>&larr; Back to Dashboard</Link>
+      <h1 style={{ fontSize: '30px', marginTop: '16px', marginBottom: 0, letterSpacing: '-0.02em' }}>{project.name}</h1>
+      {project.description && <p style={{ color: '#8a8a8a', marginTop: '8px', fontSize: '14px' }}>{project.description}</p>}
 
-      <div style={{ background: '#1a1a1a', borderRadius: '2px', padding: '24px', marginTop: '24px' }}>
-        <h2 style={{ marginBottom: '16px' }}>Run G-Code Analysis</h2>
+      <div style={{ ...cardStyle, marginTop: '40px' }}>
+        <div style={sectionLabelStyle}>Analysis</div>
+        <h2 style={{ marginTop: 0, marginBottom: '20px', fontSize: '20px' }}>Run G-Code Analysis</h2>
         <textarea
           placeholder="Paste your G-Code here..."
           value={gcode}
           onChange={e => setGcode(e.target.value)}
-          style={{ width: '100%', height: '140px', background: '#121212', border: '1px solid #2a2a2a', borderRadius: '2px', color: '#e8e6e1', padding: '12px', fontSize: '13px', fontFamily: 'monospace', resize: 'vertical' }}
+          style={{ width: '100%', height: '160px', background: '#121212', border: '1px solid #2a2a2a', borderRadius: '2px', color: '#e8e6e1', padding: '14px', fontSize: '13px', fontFamily: 'JetBrains Mono, monospace', resize: 'vertical', lineHeight: 1.6 }}
         />
-        <button onClick={analyzeGcode} style={{ marginTop: '12px' }}>Analyze and Save to Project</button>
+        <button onClick={analyzeGcode} disabled={analyzing} style={{ marginTop: '16px' }}>
+          {analyzing ? 'Analyzing...' : 'Analyze and Save to Project'}
+        </button>
       </div>
 
-      <div style={{ background: '#1a1a1a', borderRadius: '2px', padding: '24px', marginTop: '24px' }}>
-        <h2 style={{ marginBottom: '16px' }}>Analysis History</h2>
-        {analyses.length === 0 && <p style={{ color: '#8a8a8a' }}>No analyses yet for this project.</p>}
-        {analyses.map(a => (
-          <div key={a.id} style={{ background: '#121212', padding: '16px', borderRadius: '2px', marginBottom: '12px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
-              <div>
-                <p style={{ color: '#8a8a8a', fontSize: '12px' }}>RUNTIME (MIN)</p>
-                <p style={{ fontWeight: 'bold' }}>{a.estimated_runtime}</p>
+      <div style={{ ...cardStyle, marginTop: '24px' }}>
+        <div style={sectionLabelStyle}>History</div>
+        <h2 style={{ marginTop: 0, marginBottom: '20px', fontSize: '20px' }}>Analysis History</h2>
+        {analyses.length === 0 && <p style={{ color: '#8a8a8a', fontSize: '14px', padding: '16px 0' }}>No analyses yet for this project.</p>}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {analyses.map(a => (
+            <div key={a.id} style={{ background: '#121212', border: '1px solid #2a2a2a', padding: '18px', borderRadius: '2px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+                <div>
+                  <p style={{ color: '#8a8a8a', fontSize: '11px', fontWeight: 600, letterSpacing: '0.06em', margin: 0 }}>RUNTIME (MIN)</p>
+                  <p style={{ fontWeight: 600, fontSize: '16px', marginTop: '4px', marginBottom: 0, fontFamily: 'JetBrains Mono, monospace' }}>{a.estimated_runtime}</p>
+                </div>
+                <div>
+                  <p style={{ color: '#8a8a8a', fontSize: '11px', fontWeight: 600, letterSpacing: '0.06em', margin: 0 }}>ESTIMATED COST</p>
+                  <p style={{ fontWeight: 600, fontSize: '16px', marginTop: '4px', marginBottom: 0, fontFamily: 'JetBrains Mono, monospace' }}>${a.estimated_cost}</p>
+                </div>
+                <div>
+                  <p style={{ color: '#8a8a8a', fontSize: '11px', fontWeight: 600, letterSpacing: '0.06em', margin: 0 }}>RISK</p>
+                  <p style={{ fontWeight: 600, fontSize: '16px', marginTop: '4px', marginBottom: 0, color: riskColor(a.manufacturing_risk) }}>{a.manufacturing_risk}</p>
+                </div>
               </div>
-              <div>
-                <p style={{ color: '#8a8a8a', fontSize: '12px' }}>ESTIMATED COST</p>
-                <p style={{ fontWeight: 'bold' }}>${a.estimated_cost}</p>
-              </div>
-              <div>
-                <p style={{ color: '#8a8a8a', fontSize: '12px' }}>RISK</p>
-                <p style={{ fontWeight: 'bold' }}>{a.manufacturing_risk}</p>
-              </div>
+              <p style={{ color: '#555', fontSize: '11px', marginTop: '12px', marginBottom: 0 }}>{new Date(a.created_at).toLocaleString()}</p>
             </div>
-            <p style={{ color: '#555', fontSize: '11px', marginTop: '8px' }}>{new Date(a.created_at).toLocaleString()}</p>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
+    </PageTransition>
   )
 }
