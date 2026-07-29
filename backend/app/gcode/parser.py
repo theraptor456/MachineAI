@@ -11,6 +11,13 @@ class GCodeCommand:
     z: Optional[float] = None
     feed_rate: Optional[float] = None
     spindle_speed: Optional[float] = None
+    start_x: float = 0.0
+    start_y: float = 0.0
+    start_z: float = 0.0
+    end_x: float = 0.0
+    end_y: float = 0.0
+    end_z: float = 0.0
+    spindle_on: bool = False
 
 @dataclass
 class GCodeAnalysis:
@@ -37,6 +44,7 @@ def parse_gcode(gcode_text: str) -> GCodeAnalysis:
     prev_x, prev_y, prev_z = 0.0, 0.0, 0.0
     current_feed_rate = 100.0
     rapid_feed_rate = 3000.0
+    spindle_on = False
 
     for i, line in enumerate(lines):
         line = line.strip()
@@ -52,22 +60,31 @@ def parse_gcode(gcode_text: str) -> GCodeAnalysis:
         feed_rate = parse_value(line, "F")
         spindle_speed = parse_value(line, "S")
 
+        if command == "M3" or command == "M4":
+            spindle_on = True
+        if command == "M5":
+            spindle_on = False
+
         if feed_rate:
             current_feed_rate = feed_rate
+
+        curr_x = x if x is not None else prev_x
+        curr_y = y if y is not None else prev_y
+        curr_z = z if z is not None else prev_z
 
         gcode_cmd = GCodeCommand(
             line_number=i + 1,
             command=command,
             x=x, y=y, z=z,
             feed_rate=feed_rate,
-            spindle_speed=spindle_speed
+            spindle_speed=spindle_speed,
+            start_x=prev_x, start_y=prev_y, start_z=prev_z,
+            end_x=curr_x, end_y=curr_y, end_z=curr_z,
+            spindle_on=spindle_on
         )
         analysis.commands.append(gcode_cmd)
         analysis.total_commands += 1
 
-        curr_x = x if x is not None else prev_x
-        curr_y = y if y is not None else prev_y
-        curr_z = z if z is not None else prev_z
         distance = ((curr_x - prev_x)**2 + (curr_y - prev_y)**2 + (curr_z - prev_z)**2) ** 0.5
 
         if command == "G0":

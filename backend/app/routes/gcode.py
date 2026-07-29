@@ -7,6 +7,7 @@ from app.core.dependencies import get_current_user
 from app.models.user import User
 from app.gcode.parser import parse_gcode
 from app.gcode.tool_wear import predict_tool_wear
+from app.gcode.validate import validate_gcode
 from app.services.project_service import get_project_by_id
 from app.services.analysis_service import create_analysis_result
 
@@ -82,3 +83,42 @@ def analyze_gcode(
         )
 
     return response
+
+
+
+class SimulateRequest(BaseModel):
+    gcode_text: str
+
+
+@router.post("/simulate")
+def simulate_gcode(
+    request: SimulateRequest,
+    current_user: User = Depends(get_current_user)
+):
+    if not request.gcode_text.strip():
+        raise HTTPException(status_code=400, detail="G-Code text cannot be empty")
+
+    result = parse_gcode(request.gcode_text)
+    warnings = validate_gcode(result)
+
+    moves = [
+        {
+            "line_number": cmd.line_number,
+            "command": cmd.command,
+            "type": "rapid" if cmd.command == "G0" else ("cutting" if cmd.command == "G1" else "other"),
+            "start": {"x": cmd.start_x, "y": cmd.start_y, "z": cmd.start_z},
+            "end": {"x": cmd.end_x, "y": cmd.end_y, "z": cmd.end_z},
+            "feed_rate": cmd.feed_rate,
+            "spindle_on": cmd.spindle_on,
+        }
+        for cmd in result.commands
+        if cmd.command in ("G0", "G1")
+    ]
+
+    return {
+        "moves": moves,
+        "warnings": warnings,
+        "total_moves": len(moves),
+        "error_count": len([w for w in warnings if w["severity"] == "error"]),
+        "warning_count": len([w for w in warnings if w["severity"] == "warning"]),
+    }

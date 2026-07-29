@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import PageTransition from '../components/PageTransition'
+import ToolpathViewer from '../components/ToolpathViewer'
 
 interface Project {
   id: number
@@ -15,6 +16,8 @@ export default function Dashboard() {
   const [gcode, setGcode] = useState('')
   const [analysis, setAnalysis] = useState<any>(null)
   const [analyzing, setAnalyzing] = useState(false)
+  const [simulation, setSimulation] = useState<any>(null)
+  const [simulating, setSimulating] = useState(false)
   const navigate = useNavigate()
   const token = localStorage.getItem('token')
 
@@ -49,6 +52,18 @@ export default function Dashboard() {
       alert('Analysis failed')
     } finally {
       setAnalyzing(false)
+    }
+  }
+
+  const simulateGcode = async () => {
+    setSimulating(true)
+    try {
+      const res = await axios.post('http://localhost:8000/gcode/simulate', { gcode_text: gcode }, { headers })
+      setSimulation(res.data)
+    } catch {
+      alert('Simulation failed')
+    } finally {
+      setSimulating(false)
     }
   }
 
@@ -142,13 +157,47 @@ export default function Dashboard() {
           onChange={e => setGcode(e.target.value)}
           style={{ width: '100%', height: '180px', background: '#121212', border: '1px solid #2a2a2a', borderRadius: '2px', color: '#e8e6e1', padding: '14px', fontSize: '13px', fontFamily: 'JetBrains Mono, monospace', resize: 'vertical', lineHeight: 1.6 }}
         />
-        <button
-          onClick={analyzeGcode}
-          disabled={analyzing}
-          style={{ marginTop: '16px' }}
-        >
-          {analyzing ? 'Analyzing...' : 'Analyze G-Code'}
-        </button>
+        <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
+          <button onClick={analyzeGcode} disabled={analyzing}>
+            {analyzing ? 'Analyzing...' : 'Analyze G-Code'}
+          </button>
+          <button
+            onClick={simulateGcode}
+            disabled={simulating}
+            style={{ background: '#1a1a1a', border: '1px solid #2a2a2a', color: '#e8e6e1' }}
+          >
+            {simulating ? 'Simulating...' : 'Simulate Toolpath'}
+          </button>
+        </div>
+
+        {simulation && (
+          <div style={{ marginTop: '28px' }}>
+            <ToolpathViewer moves={simulation.moves} warnings={simulation.warnings} />
+            {simulation.warnings.length > 0 ? (
+              <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {simulation.warnings.map((w: any, i: number) => (
+                  <div
+                    key={i}
+                    style={{
+                      background: '#121212',
+                      border: `1px solid ${w.severity === 'error' ? '#c73e3e' : '#d4a017'}`,
+                      borderRadius: '2px',
+                      padding: '10px 14px',
+                      fontSize: '13px'
+                    }}
+                  >
+                    <span style={{ color: w.severity === 'error' ? '#c73e3e' : '#d4a017', fontWeight: 600, textTransform: 'uppercase', fontSize: '11px' }}>
+                      {w.severity}
+                    </span>
+                    {' — Line '}{w.line_number}: {w.message}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p style={{ color: '#4a9d6f', fontSize: '13px', marginTop: '12px' }}>No issues found in this toolpath.</p>
+            )}
+          </div>
+        )}
         {analysis && (
           <div style={{ marginTop: '28px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             {Object.entries(analysis).map(([key, value]) => (
