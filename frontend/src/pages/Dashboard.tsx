@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import PageTransition from '../components/PageTransition'
 import ToolpathViewer from '../components/ToolpathViewer'
+import GlossaryLabel from '../components/GlossaryLabel'
 
 interface Project {
   id: number
@@ -251,9 +252,10 @@ export default function Dashboard() {
           <div style={{ marginTop: '28px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             {Object.entries(analysis).map(([key, value]) => (
               <div key={key} style={{ background: '#121212', border: '1px solid #2a2a2a', padding: '16px 18px', borderRadius: '2px' }}>
-                <p style={{ color: '#8a8a8a', fontSize: '11px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', margin: 0 }}>
-                  {key.replace(/_/g, ' ')}
-                </p>
+                <GlossaryLabel
+                  label={key.replace(/_/g, ' ')}
+                  style={{ color: '#8a8a8a', fontSize: '11px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', margin: 0 }}
+                />
                 {value !== null && typeof value === 'object' ? (
                   <div style={{ marginTop: '8px' }}>
                     {Object.entries(value as Record<string, unknown>).map(([k, v]) => (
