@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import PageTransition from '../components/PageTransition'
@@ -18,6 +18,9 @@ export default function Dashboard() {
   const [analyzing, setAnalyzing] = useState(false)
   const [simulation, setSimulation] = useState<any>(null)
   const [simulating, setSimulating] = useState(false)
+  const [generating, setGenerating] = useState(false)
+  const [stlInfo, setStlInfo] = useState<any>(null)
+  const stlFileRef = React.useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
   const token = localStorage.getItem('token')
 
@@ -64,6 +67,29 @@ export default function Dashboard() {
       alert('Simulation failed')
     } finally {
       setSimulating(false)
+    }
+  }
+
+  const generateFromStl = async (file: File) => {
+    setGenerating(true)
+    setStlInfo(null)
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('stock_margin', '5')
+    formData.append('depth_per_pass', '2')
+    formData.append('tool_diameter', '6')
+    try {
+      const res = await axios.post('http://localhost:8000/cam/generate-from-stl', formData, {
+        headers: { ...headers, 'Content-Type': 'multipart/form-data' }
+      })
+      setGcode(res.data.gcode)
+      setStlInfo(res.data.bounding_box)
+      setAnalysis(null)
+      setSimulation(null)
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Could not generate G-Code from this STL file.')
+    } finally {
+      setGenerating(false)
     }
   }
 
@@ -146,6 +172,29 @@ export default function Dashboard() {
             </div>
           ))}
         </div>
+      </div>
+
+      <div style={{ ...cardStyle, marginBottom: '24px' }}>
+        <div style={sectionLabelStyle}>CAM</div>
+        <h2 style={{ marginTop: 0, marginBottom: '8px', fontSize: '20px' }}>Generate G-Code from STL</h2>
+        <p style={{ color: '#8a8a8a', fontSize: '13px', marginTop: 0, marginBottom: '16px' }}>
+          Uploads a 3D model and generates a 2.5D roughing toolpath that clears stock material around the part's outer footprint.
+        </p>
+        <input
+          ref={stlFileRef}
+          type="file"
+          accept=".stl"
+          style={{ display: 'none' }}
+          onChange={e => e.target.files && generateFromStl(e.target.files[0])}
+        />
+        <button onClick={() => stlFileRef.current?.click()} disabled={generating}>
+          {generating ? 'Generating...' : 'Upload STL File'}
+        </button>
+        {stlInfo && (
+          <p style={{ color: '#4a9d6f', fontSize: '13px', marginTop: '12px' }}>
+            G-Code generated from part ({(stlInfo.max_x - stlInfo.min_x).toFixed(1)} x {(stlInfo.max_y - stlInfo.min_y).toFixed(1)} x {(stlInfo.max_z - stlInfo.min_z).toFixed(1)} mm) — loaded into the analyzer below.
+          </p>
+        )}
       </div>
 
       <div style={cardStyle}>
