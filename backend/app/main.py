@@ -3,7 +3,7 @@ from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import engine
-from app.routes import auth, projects, gcode, tools, materials, ai_assistant
+from app.routes import auth, projects, gcode, tools, materials, ai_assistant, cam
 
 app = FastAPI(
     title="MachineAI",
@@ -182,6 +182,7 @@ app.include_router(gcode.router)
 app.include_router(tools.router)
 app.include_router(materials.router)
 app.include_router(ai_assistant.router)
+app.include_router(cam.router)
 
 @app.get("/")
 def root():
