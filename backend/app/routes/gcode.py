@@ -8,6 +8,7 @@ from app.models.user import User
 from app.gcode.parser import parse_gcode
 from app.gcode.tool_wear import predict_tool_wear
 from app.gcode.validate import validate_gcode
+from app.services.ai_service import get_ai_response
 from app.services.project_service import get_project_by_id
 from app.services.analysis_service import create_analysis_result
 
@@ -122,3 +123,35 @@ def simulate_gcode(
         "error_count": len([w for w in warnings if w["severity"] == "error"]),
         "warning_count": len([w for w in warnings if w["severity"] == "warning"]),
     }
+
+
+
+class ExplainRequest(BaseModel):
+    analysis: dict
+
+
+@router.post("/explain")
+def explain_analysis(
+    request: ExplainRequest,
+    current_user: User = Depends(get_current_user)
+):
+    summary_lines = []
+    for key, value in request.analysis.items():
+        label = key.replace("_", " ")
+        if isinstance(value, dict):
+            nested = ", ".join(f"{k.replace('_', ' ')}: {v}" for k, v in value.items())
+            summary_lines.append(f"{label}: {nested}")
+        else:
+            summary_lines.append(f"{label}: {value}")
+
+    prompt = (
+        "A student ran a G-Code analysis on the MachineAI platform and got these results:\n\n"
+        + "\n".join(summary_lines)
+        + "\n\nExplain what these results mean in plain English, as if teaching someone new to CNC "
+        "machining. Focus especially on WHY the risk level and tool wear came out the way they did, "
+        "and what the student should actually pay attention to. Keep it concise, a few short paragraphs "
+        "at most, no long lists."
+    )
+
+    result = get_ai_response(prompt)
+    return result

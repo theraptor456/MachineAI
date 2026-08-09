@@ -21,6 +21,11 @@ export default function Dashboard() {
   const [simulating, setSimulating] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [stlInfo, setStlInfo] = useState<any>(null)
+  const [explanation, setExplanation] = useState('')
+  const [explaining, setExplaining] = useState(false)
+  const [explainHistory, setExplainHistory] = useState<{role: string, content: string}[]>([])
+  const [followUp, setFollowUp] = useState('')
+  const [followUpLoading, setFollowUpLoading] = useState(false)
   const stlFileRef = React.useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
   const token = localStorage.getItem('token')
@@ -91,6 +96,45 @@ export default function Dashboard() {
       alert(err.response?.data?.detail || 'Could not generate G-Code from this STL file.')
     } finally {
       setGenerating(false)
+    }
+  }
+
+  const explainAnalysis = async () => {
+    if (!analysis) return
+    setExplaining(true)
+    setExplanation('')
+    setExplainHistory([])
+    try {
+      const res = await axios.post('http://localhost:8000/gcode/explain', { analysis }, { headers })
+      setExplanation(res.data.response)
+      setExplainHistory([
+        { role: 'user', content: `Here are my G-Code analysis results: ${JSON.stringify(analysis)}. Explain what these mean.` },
+        { role: 'assistant', content: res.data.response }
+      ])
+    } catch {
+      setExplanation('Could not generate an explanation right now. Please try again.')
+    } finally {
+      setExplaining(false)
+    }
+  }
+
+  const askFollowUp = async () => {
+    if (!followUp.trim() || followUpLoading) return
+    const question = followUp
+    setFollowUp('')
+    setExplainHistory(prev => [...prev, { role: 'user', content: question }])
+    setFollowUpLoading(true)
+    try {
+      const res = await axios.post(
+        'http://localhost:8000/ai-assistant/chat',
+        { message: question, conversation_history: explainHistory },
+        { headers }
+      )
+      setExplainHistory(prev => [...prev, { role: 'assistant', content: res.data.response }])
+    } catch {
+      setExplainHistory(prev => [...prev, { role: 'assistant', content: 'Something went wrong. Please try again.' }])
+    } finally {
+      setFollowUpLoading(false)
     }
   }
 
@@ -272,6 +316,49 @@ export default function Dashboard() {
                 )}
               </div>
             ))}
+          </div>
+        )}
+        {analysis && (
+          <div style={{ marginTop: '20px' }}>
+            <button
+              onClick={explainAnalysis}
+              disabled={explaining}
+              style={{ background: '#1a1a1a', border: '1px solid #2a2a2a', color: '#e8e6e1' }}
+            >
+              {explaining ? 'Explaining...' : 'Explain This Analysis'}
+            </button>
+            {explanation && (
+              <div style={{ marginTop: '16px' }}>
+                <div style={{ background: '#121212', border: '1px solid #2a2a2a', borderRadius: '2px', padding: '18px 20px', fontSize: '14px', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
+                  {explanation}
+                </div>
+                {explainHistory.slice(2).map((m, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start', marginTop: '10px' }}>
+                    <div style={{
+                      maxWidth: '80%',
+                      background: m.role === 'user' ? '#ff6b1a' : '#121212',
+                      color: m.role === 'user' ? '#121212' : '#e8e6e1',
+                      border: m.role === 'assistant' ? '1px solid #2a2a2a' : 'none',
+                      borderRadius: '2px', padding: '10px 14px', fontSize: '13px', lineHeight: 1.6, whiteSpace: 'pre-wrap'
+                    }}>
+                      {m.content}
+                    </div>
+                  </div>
+                ))}
+                {followUpLoading && (
+                  <div style={{ marginTop: '10px', color: '#8a8a8a', fontSize: '13px' }}>Thinking...</div>
+                )}
+                <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                  <input
+                    placeholder="Ask a follow-up question..."
+                    value={followUp}
+                    onChange={e => setFollowUp(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && askFollowUp()}
+                  />
+                  <button onClick={askFollowUp} disabled={followUpLoading} style={{ width: 'auto' }}>Ask</button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
